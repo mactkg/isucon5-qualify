@@ -7,5 +7,5 @@ gem "mysql2-cs-bind"
 gem "erubis"
 gem "unicorn"
 gem 'pry-byebug'
-gem 'redis'
+gem "redis", ">= 3.2.0", :require => ["redis", "redis/connection/hiredis"]
 gem 'hiredis'
