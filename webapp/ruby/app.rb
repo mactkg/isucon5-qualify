@@ -382,11 +382,15 @@ SQL
     query = 'SELECT * FROM relations WHERE one = ? OR another = ? ORDER BY created_at DESC'
     friends = {}
     db.xquery(query, current_user[:id], current_user[:id]).each do |rel|
-      key = (rel[:one] == current_user[:id] ? :another : :one)
-      friends[rel[key]] ||= rel[:created_at]
+      friend_id = (rel[:one] == current_user[:id] ? rel[:another] : rel[:one])
+      friends[friend_id] ||= rel[:created_at]
     end
-    list = friends.map{|user_id, created_at| [user_id, created_at]}
-    erb :friends, locals: { friends: list }
+    
+    db.xquery('SELECT * FROM users WHERE id IN (?)', [friends.keys]).each do |rel|
+      friends[rel[:id]] = { created_at: friends[rel[:id]], account_name: rel[:account_name], nick_name: rel[:nick_name]}
+    end
+
+    erb :friends, locals: { friends: friends }
   end
 
   post '/friends/:account_name' do
