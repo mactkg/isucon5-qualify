@@ -314,7 +314,7 @@ SQL
     end
     comments = db.xquery('SELECT * FROM comments WHERE entry_id = ?', entry[:id])
     mark_footprint(owner[:id])
-    erb :entry, locals: { owner: owner, entry: entry, comments: comments, entry_comment_count: comments.size }
+    erb :entry, locals: { owner: owner, entry: entry, comments: comments }
   end
 
   post '/diary/entry' do
