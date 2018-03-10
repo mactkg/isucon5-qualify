@@ -58,6 +58,7 @@ class Isucon5::WebApp < Sinatra::Base
       client = Redis.new(
         host: '127.0.0.1',
         port: '6379',
+        driver: :hiredis
       )
       Thread.current[:isucon5_redis] = client
       client
