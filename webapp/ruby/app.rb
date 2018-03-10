@@ -298,8 +298,19 @@ SQL
               'SELECT * FROM entries WHERE user_id = ? AND private=0 ORDER BY created_at DESC LIMIT 20'
             end
     entries = db.xquery(query, owner[:id])
-      .map{ |entry| entry[:is_private] = (entry[:private] == 1); entry[:title], entry[:content] = entry[:body].split(/\n/, 2); entry }
+    comment_count_query = 'SELECT entry_id, count(*) as count from comments where entry_id in (?) group by entry_id'
+    comment_count = db.xquery(comment_count_query, [entries.map{|entry| entry[:id] }])
+
+    entries.map do |entry|
+      comment_with_entry = comment_count.detect{|cc| cc[:entry_id] == entry[:id]}
+      entry[:comment_count] = !comment_with_entry.nil? ? comment_with_entry[:count] : 0
+      entry[:is_private] = (entry[:private] == 1)
+      entry[:title], entry[:content] = entry[:body].split(/\n/, 2)
+      entry
+    end
+
     mark_footprint(owner[:id])
+
     erb :entries, locals: { owner: owner, entries: entries, myself: (current_user[:id] == owner[:id]) }
   end
 
