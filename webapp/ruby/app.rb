@@ -372,7 +372,7 @@ SELECT footprint.*, users.nick_name, users.account_name from (SELECT user_id, ow
 FROM footprints
 WHERE user_id = ?
 GROUP BY user_id, owner_id, DATE(created_at)) footprint
-INNER JOIN users on users.id = footprint.user_id
+INNER JOIN users on users.id = footprint.owner_id
 ORDER BY footprint.updated DESC
 LIMIT 50
 SQL
