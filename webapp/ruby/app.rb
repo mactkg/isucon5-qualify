@@ -70,6 +70,7 @@ class Isucon5::WebApp < Sinatra::Base
       client = Redis.new(
         host: '127.0.0.1',
         port: '6379',
+        driver: :hiredis
       )
       Thread.current[:isucon5_redis] = client
       client
@@ -124,8 +125,10 @@ SQL
 
     def is_friend?(another_id)
       user_id = session[:user_id]
-      query = 'SELECT COUNT(1) AS cnt FROM relations WHERE (one = ? AND another = ?) OR (one = ? AND another = ?)'
-      cnt = db.xquery(query, user_id, another_id, another_id, user_id).first[:cnt]
+      # one < anotherをrelationshipにおけるルールとする
+      one, another = user_id < another_id ? [user_id, another_id] : [another_id, user_id]
+      query = 'SELECT COUNT(1) AS cnt FROM relations WHERE (one = ? AND another = ?)'
+      cnt = db.xquery(query, one, another).first[:cnt]
       cnt.to_i > 0
     end
 
@@ -412,7 +415,9 @@ SQL
       unless user
         raise Isucon5::ContentNotFound
       end
-      db.xquery('INSERT INTO relations (one, another) VALUES (?,?), (?,?)', current_user[:id], user[:id], user[:id], current_user[:id])
+      # 必ず one < another となるセットのみ有効とする
+      one, another = current_user[:id] < user[:id] ? [current_user[:id], user[:id]] : [user[:id], current_user[:id]]
+      db.xquery('INSERT INTO relations (one, another) VALUES (?,?)', one, another)
       redirect '/friends'
     end
   end
