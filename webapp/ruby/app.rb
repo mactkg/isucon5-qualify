@@ -324,9 +324,9 @@ SQL
     if entry[:is_private] && !permitted?(owner[:id])
       raise Isucon5::PermissionDenied
     end
-    comments = db.xquery('SELECT * FROM comments WHERE entry_id = ?', entry[:id])
+    comment_with_users = db.xquery('SELECT comments.*, users.account_name, users.nick_name FROM comments inner join users on comments.user_id = users.id WHERE comments.entry_id = ?', entry[:id])
     mark_footprint(owner[:id])
-    erb :entry, locals: { owner: owner, entry: entry, comments: comments }
+    erb :entry, locals: { owner: owner, entry: entry, comment_with_users: comment_with_users }
   end
 
   post '/diary/entry' do

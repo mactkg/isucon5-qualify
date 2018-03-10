@@ -12,16 +12,15 @@
 
 <h3>この日記へのコメント</h3>
 <div class="row panel panel-primary" id="entry-comments">
-  <% comments.each do |comment| %>
+  <% comment_with_users.each do |comment_with_user| %>
   <div class="comment">
-    <% comment_user = get_user(comment[:user_id]) %>
-    <div class="comment-owner"><a href="/profile/<%= comment_user[:account_name] %>"><%= comment_user[:nick_name] %>さん</a></div>
+    <div class="comment-owner"><a href="/profile/<%= comment_with_user[:account_name] %>"><%= comment_with_user[:nick_name] %>さん</a></div>
     <div class="comment-comment">
-      <% comment[:comment].split(/\n/).each do |line| %>
+      <% comment_with_user[:comment].split(/\n/).each do |line| %>
       <%= line %><br />
       <% end %>
     </div>
-    <div class="comment-created-at">投稿時刻:<%= comment[:created_at] %></div>
+    <div class="comment-created-at">投稿時刻:<%= comment_with_user[:created_at] %></div>
   </div>
   <% end %>
 </div>
