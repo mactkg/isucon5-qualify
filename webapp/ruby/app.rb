@@ -53,6 +53,16 @@ class Isucon5::WebApp < Sinatra::Base
       client
     end
 
+    def redis
+      return Thread.current[:isucon5_redis] if Thread.current[:isucon5_redis]
+      client = Redis.new(
+        host: '127.0.0.1',
+        port: '6379',
+      )
+      Thread.current[:isucon5_redis] = client
+      client
+    end
+
     def authenticate(email, password)
       query = <<SQL
 SELECT u.id AS id, u.account_name AS account_name, u.nick_name AS nick_name, u.email AS email
