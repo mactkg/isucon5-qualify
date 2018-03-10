@@ -171,17 +171,30 @@ SQL
       .map{ |entry| entry[:is_private] = (entry[:private] == 1); entry[:title], entry[:content] = entry[:body].split(/\n/, 2); entry }
 
     comments_for_me_query = <<SQL
-SELECT c.id AS id, c.entry_id AS entry_id, c.user_id AS user_id, c.comment AS comment, c.created_at AS created_at
+SELECT c.id AS id, c.entry_id AS entry_id, c.user_id AS user_id, c.comment AS comment, c.created_at AS created_at, u.account_name AS comment_account_name, u.nick_name AS comment_nick_name
 FROM comments c
 JOIN entries e ON c.entry_id = e.id
+JOIN users u ON c.user_id = u.id
 WHERE e.user_id = ?
 ORDER BY c.created_at DESC
 LIMIT 10
 SQL
     comments_for_me = db.xquery(comments_for_me_query, current_user[:id])
 
+    entries_of_friends_query = <<SQL
+SELECT e.id AS id,
+  e.user_id AS user_id,
+  e.created_at AS created_at,
+  e.body AS body,
+  u.account_name AS account_name,
+  u.nick_name AS nick_name
+FROM entries e
+  JOIN users u ON e.user_id = u.id
+ORDER BY created_at
+DESC LIMIT 1000
+SQL
     entries_of_friends = []
-    db.query('SELECT * FROM entries ORDER BY created_at DESC LIMIT 1000').each do |entry|
+    db.query(entries_of_friends_query).each do |entry|
       next unless is_friend?(entry[:user_id])
       entry[:title] = entry[:body].split(/\n/).first
       entries_of_friends << entry
@@ -207,10 +220,16 @@ SQL
     friends = friends_map.map{|user_id, created_at| [user_id, created_at]}
 
     query = <<SQL
-SELECT user_id, owner_id, DATE(created_at) AS date, MAX(created_at) AS updated
-FROM footprints
+SELECT f.user_id AS user_id,
+  f.owner_id AS owner_id,
+  DATE(f.created_at) AS date,
+  MAX(f.created_at) AS updated,
+  u.account_name AS account_name,
+  u.nick_name AS nick_name
+FROM footprints f
+  JOIN users u ON f.owner_id = u.id
 WHERE user_id = ?
-GROUP BY user_id, owner_id, DATE(created_at)
+GROUP BY user_id, owner_id, DATE(f.created_at)
 ORDER BY updated DESC
 LIMIT 10
 SQL
