@@ -355,11 +355,12 @@ SQL
   get '/footprints' do
     authenticated!
     query = <<SQL
-SELECT user_id, owner_id, DATE(created_at) AS date, MAX(created_at) as updated
+SELECT footprint.*, users.nick_name, users.account_name from (SELECT user_id, owner_id, DATE(created_at) AS date, MAX(created_at) as updated
 FROM footprints
 WHERE user_id = ?
-GROUP BY user_id, owner_id, DATE(created_at)
-ORDER BY updated DESC
+GROUP BY user_id, owner_id, DATE(created_at)) footprint
+INNER JOIN users on users.id = footprint.user_id
+ORDER BY footprint.updated DESC
 LIMIT 50
 SQL
     footprints = db.xquery(query, current_user[:id])
